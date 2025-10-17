@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DPX Bot Hosting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container login-container">
+        <div class="form-box">
+            <h1 class="title-animation">DPX BOT HOSTING</h1>
+            <p class="subtitle">अपने बॉट्स को मैनेज करें</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="input-group">
+                    <input type="password" name="access_code" required>
+                    <label>Login Access Code</label>
+                </div>
+                <button type="submit" class="btn-primary">LOGIN</button>
+            </form>
+            <div class="buy-link">
+                <p>Don't have an access code?</p>
+                <a href="https://t.me/Dpx_army_ff_01" target="_blank">Buy Access Code</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
