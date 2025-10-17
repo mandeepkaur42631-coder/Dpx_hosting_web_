@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DPX Bot Hosting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container dashboard-container">
+        <header>
+            <h1 class="title-animation">Bot Dashboard</h1>
+            <a href="{{ url_for('logout') }}" class="btn-secondary">Logout</a>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="card upload-card">
+            <h2><span class="icon">+</span> नया बॉट अपलोड करें</h2>
+            <form action="{{ url_for('upload_bot') }}" method="POST" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="text" name="bot_name" required>
+                    <label>बॉट का नाम (जैसे: MyBot1)</label>
+                </div>
+                <div class="file-input">
+                    <label for="bot_file">Bot.py फ़ाइल चुनें:</label>
+                    <input type="file" name="bot_file" accept=".py" required>
+                </div>
+                <div class="file-input">
+                    <label for="req_file">requirements.txt फ़ाइल चुनें:</label>
+                    <input type="file" name="req_file" accept=".txt" required>
+                </div>
+                <button type="submit" class="btn-primary">अपलोड करें</button>
+            </form>
+        </div>
+
+        <div class="card bot-list-card">
+            <h2><span class="icon">🤖</span> आपके बॉट्स</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>बॉट का नाम</th>
+                        <th>स्टेटस</th>
+                        <th>एक्शन</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if bots %}
+                        {% for bot in bots %}
+                        <tr>
+                            <td>{{ bot.name }}</td>
+                            <td><span class="status-pill status-{{ bot.status.lower() }}">{{ bot.status }}</span></td>
+                            <td class="action-buttons">
+                                <form action="{{ url_for('manage_bot', action='run', bot_name=bot.name) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action run">Run</button>
+                                </form>
+                                <form action="{{ url_for('manage_bot', action='stop', bot_name=bot.name) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action stop">Stop</button>
+                                </form>
+                                <form action="{{ url_for('manage_bot', action='restart', bot_name=bot.name) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-action restart">Restart</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="3">अभी कोई बॉट नहीं है।</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
