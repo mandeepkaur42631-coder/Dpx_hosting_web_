@@ -1,120 +1,210 @@
-import os
-import subprocess
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+:root {
+    --primary-color: #00ff9d;
+    --dark-bg: #121212;
+    --card-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --error-color: #ff5252;
+    --success-color: #00ff9d;
+    --warning-color: #ffc107;
+}
 
-app = Flask(__name__)
-app.secret_key = 'ec25d878b48e514cf2ec30439846000a'
-LOGIN_ACCESS_CODE = "DPX1432"
-BOTS_DIR = "bots"
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
 
-# सुनिश्चित करें कि 'bots' डायरेक्टरी मौजूद है
-if not os.path.exists(BOTS_DIR):
-    os.makedirs(BOTS_DIR)
+.container {
+    width: 90%;
+    max-width: 1000px;
+    padding: 20px;
+}
 
-# बॉट प्रक्रियाओं को ट्रैक करने के लिए एक डिक्शनरी
-bot_processes = {}
+/* --- Animation --- */
+.title-animation {
+    background: linear-gradient(90deg, var(--primary-color), #00c6ff, #ff00ff, var(--primary-color));
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-animation 10s ease infinite;
+    font-weight: 700;
+}
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        access_code = request.form.get('access_code')
-        if access_code == LOGIN_ACCESS_CODE:
-            session['logged_in'] = True
-            return redirect(url_for('index'))
-        else:
-            flash('गलत एक्सेस कोड!', 'error')
-            return redirect(url_for('login'))
-    return render_template('login.html')
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 
-@app.route('/')
-def index():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
+/* --- Login Page --- */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.form-box {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+}
+.subtitle {
+    color: #a0a0a0;
+    margin-bottom: 30px;
+}
+.input-group {
+    position: relative;
+    margin-bottom: 30px;
+}
+.input-group input {
+    width: 100%;
+    padding: 10px 0;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--primary-color);
+    outline: none;
+    color: var(--text-color);
+    font-size: 16px;
+}
+.input-group label {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    color: #a0a0a0;
+    pointer-events: none;
+    transition: 0.3s;
+}
+.input-group input:focus ~ label,
+.input-group input:valid ~ label {
+    top: -15px;
+    font-size: 12px;
+    color: var(--primary-color);
+}
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    background: var(--primary-color);
+    color: var(--dark-bg);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn-primary:hover {
+    box-shadow: 0 0 15px var(--primary-color);
+}
+.buy-link {
+    margin-top: 20px;
+}
+.buy-link a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+}
 
-    bots = []
-    if os.path.exists(BOTS_DIR):
-        for bot_name in os.listdir(BOTS_DIR):
-            bot_path = os.path.join(BOTS_DIR, bot_name)
-            if os.path.isdir(bot_path):
-                status = "Running" if bot_name in bot_processes else "Stopped"
-                bots.append({'name': bot_name, 'status': status})
-            
-    return render_template('index.html', bots=bots)
+/* --- Flash Messages --- */
+.flash-container { margin-bottom: 20px; }
+.flash {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    color: #fff;
+    text-align: center;
+}
+.flash.error { background-color: var(--error-color); }
+.flash.success { background-color: var(--success-color); color: var(--dark-bg); }
+.flash.warning { background-color: var(--warning-color); color: var(--dark-bg); }
 
-@app.route('/upload', methods=['POST'])
-def upload_bot():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
+/* --- Dashboard --- */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--primary-color);
+    padding-bottom: 15px;
+}
+.btn-secondary {
+    padding: 8px 16px;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: 5px;
+    text-decoration: none;
+    transition: 0.3s;
+}
+.btn-secondary:hover {
+    background: var(--primary-color);
+    color: var(--dark-bg);
+}
 
-    bot_name = request.form.get('bot_name')
-    bot_file = request.files.get('bot_file')
-    req_file = request.files.get('req_file')
+.card {
+    background: var(--card-bg);
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
 
-    if not bot_name or not bot_file or not req_file:
-        flash('बॉट का नाम, bot.py और requirements.txt फ़ाइलें ज़रूरी हैं!', 'error')
-        return redirect(url_for('index'))
+.card h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+}
+.card h2 .icon {
+    margin-right: 10px;
+}
+.file-input { margin: 20px 0; }
+.file-input label { display: block; margin-bottom: 5px; }
 
-    bot_dir = os.path.join(BOTS_DIR, bot_name)
-    if not os.path.exists(bot_dir):
-        os.makedirs(bot_dir)
-
-    bot_file.save(os.path.join(bot_dir, 'bot.py'))
-    req_file.save(os.path.join(bot_dir, 'requirements.txt'))
-
-    flash(f'बॉट "{bot_name}" सफलतापूर्वक अपलोड हो गया!', 'success')
-    return redirect(url_for('index'))
-
-@app.route('/bot/<action>/<bot_name>', methods=['POST'])
-def manage_bot(action, bot_name):
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
-
-    bot_dir = os.path.join(BOTS_DIR, bot_name)
-    bot_script = os.path.join(bot_dir, 'bot.py')
-
-    if action == 'run':
-        if bot_name in bot_processes:
-            flash(f'बॉट "{bot_name}" पहले से ही चल रहा है।', 'warning')
-            return redirect(url_for('index'))
-
-        try:
-            req_path = os.path.join(bot_dir, 'requirements.txt')
-            subprocess.run(['pip', 'install', '-r', req_path], check=True)
-            
-            process = subprocess.Popen(['python', bot_script], cwd=bot_dir)
-            bot_processes[bot_name] = process
-            flash(f'बॉट "{bot_name}" शुरू हो गया है!', 'success')
-        except Exception as e:
-            flash(f'बॉट "{bot_name}" शुरू करने में त्रुटि: {e}', 'error')
-
-    elif action == 'stop':
-        if bot_name in bot_processes:
-            bot_processes[bot_name].terminate()
-            bot_processes.pop(bot_name)
-            flash(f'बॉट "{bot_name}" बंद कर दिया गया है।', 'success')
-        else:
-            flash(f'बॉट "{bot_name}" नहीं चल रहा है।', 'warning')
-            
-    elif action == 'restart':
-        if bot_name in bot_processes:
-            bot_processes[bot_name].terminate()
-            bot_processes.pop(bot_name)
-        
-        try:
-            req_path = os.path.join(bot_dir, 'requirements.txt')
-            subprocess.run(['pip', 'install', '-r', req_path], check=True)
-            process = subprocess.Popen(['python', bot_script], cwd=bot_dir)
-            bot_processes[bot_name] = process
-            flash(f'बॉट "{bot_name}" फिर से शुरू हो गया है!', 'success')
-        except Exception as e:
-            flash(f'बॉट "{bot_name}" को फिर से शुरू करने में त्रुटि: {e}', 'error')
-
-    return redirect(url_for('index'))
-
-@app.route('/logout')
-def logout():
-    session.pop('logged_in', None)
-    return redirect(url_for('login'))
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+th {
+    color: var(--primary-color);
+}
+.status-pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.status-running {
+    background-color: var(--success-color);
+    color: var(--dark-bg);
+}
+.status-stopped {
+    background-color: var(--error-color);
+    color: #fff;
+}
+.action-buttons .btn-action {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    margin: 0 2px;
+    transition: transform 0.2s;
+}
+.action-buttons .btn-action:hover {
+    transform: scale(1.1);
+}
+.btn-action.run { background-color: #28a745; }
+.btn-action.stop { background-color: #dc3545; }
+.btn-action.restart { background-color: #17a2b8; }
