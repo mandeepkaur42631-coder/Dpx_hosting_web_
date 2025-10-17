@@ -3,9 +3,10 @@ import subprocess
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = 'ec25d878b48e514cf2ec30439846000a'  # इसे एक मजबूत सीक्रेट की से बदलें
-LOGIN_ACCESS_CODE = "DPX1432"
-BOTS_DIR = "bots"
+app.secret_key = 'ec25d878b48e514cf2ec30439846000a'  # आपका सीक्रेट की
+
+# बदला हुआ हिस्सा: अब फाइलें परमानेंट डिस्क पर सेव होंगी
+BOTS_DIR = "/data/bots"
 
 # सुनिश्चित करें कि 'bots' डायरेक्टरी मौजूद है
 if not os.path.exists(BOTS_DIR):
@@ -30,6 +31,10 @@ def login():
 def index():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
+
+    # सुरक्षा के लिए दोबारा जांचें कि डायरेक्टरी मौजूद है
+    if not os.path.exists(BOTS_DIR):
+        os.makedirs(BOTS_DIR)
 
     bots = []
     for bot_name in os.listdir(BOTS_DIR):
@@ -72,17 +77,14 @@ def manage_bot(action, bot_name):
     bot_script = os.path.join(bot_dir, 'bot.py')
 
     if action == 'run':
-        # पहले से चल रहा है या नहीं, जांचें
         if bot_name in bot_processes:
             flash(f'बॉट "{bot_name}" पहले से ही चल रहा है।', 'warning')
             return redirect(url_for('index'))
 
         try:
-            # Requirements इंस्टॉल करें
             req_path = os.path.join(bot_dir, 'requirements.txt')
             subprocess.run(['pip', 'install', '-r', req_path], check=True)
             
-            # बॉट को एक नई प्रक्रिया में चलाएं
             process = subprocess.Popen(['python', bot_script], cwd=bot_dir)
             bot_processes[bot_name] = process
             flash(f'बॉट "{bot_name}" शुरू हो गया है!', 'success')
@@ -120,3 +122,5 @@ def logout():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+            
